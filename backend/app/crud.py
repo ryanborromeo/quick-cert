@@ -25,7 +25,7 @@ def get_patient(session: Session, patient_id: int) -> Optional[Patient]:
 
 
 def create_patient(session: Session, patient: PatientCreate) -> Patient:
-    db_patient = Patient.model_validate(patient)
+    db_patient = Patient(**patient.model_dump())
     session.add(db_patient)
     session.commit()
     session.refresh(db_patient)
@@ -65,7 +65,9 @@ def get_visit(session: Session, visit_id: int) -> Optional[Visit]:
 
 
 def create_visit(session: Session, patient_id: int, visit: VisitCreate) -> Visit:
-    db_visit = Visit.model_validate(visit, update={"patient_id": patient_id})
+    data = visit.model_dump()
+    data["patient_id"] = patient_id
+    db_visit = Visit(**data)
     session.add(db_visit)
     session.commit()
     session.refresh(db_visit)
@@ -83,7 +85,9 @@ def get_certificate(session: Session, certificate_id: int) -> Optional[Certifica
 
 
 def create_certificate(session: Session, visit_id: int, certificate: CertificateCreate) -> Certificate:
-    db_certificate = Certificate.model_validate(certificate, update={"visit_id": visit_id})
+    data = certificate.model_dump()
+    data["visit_id"] = visit_id
+    db_certificate = Certificate(**data)
     session.add(db_certificate)
     session.commit()
     session.refresh(db_certificate)

@@ -1,7 +1,6 @@
 from datetime import datetime, date
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
-import json
 
 
 class PatientBase(SQLModel):
@@ -28,7 +27,7 @@ class PatientRead(PatientBase):
 
 
 class PatientReadWithVisits(PatientRead):
-    visits: List["VisitRead"] = []
+    visits: List["VisitReadWithCertificates"] = []
 
 
 class VisitBase(SQLModel):

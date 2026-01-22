@@ -58,7 +58,43 @@ def get_patient(patient_id: int, session: Session = Depends(get_session)):
     patient = crud.get_patient(session, patient_id)
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return patient
+
+    visits = crud.get_visits_by_patient(session, patient_id)
+    visit_reads: List[VisitReadWithCertificates] = []
+    for v in visits:
+        certs = crud.get_certificates_by_visit(session, v.id)
+        visit_reads.append(
+            VisitReadWithCertificates(
+                id=v.id,
+                patient_id=v.patient_id,
+                date=v.date,
+                doctor=v.doctor,
+                reason=v.reason,
+                diagnosis=v.diagnosis,
+                created_at=v.created_at,
+                certificates=[
+                    CertificateRead(
+                        id=c.id,
+                        visit_id=c.visit_id,
+                        cert_type=c.cert_type,
+                        cert_data=c.cert_data,
+                        created_at=c.created_at,
+                    )
+                    for c in certs
+                ],
+            )
+        )
+
+    return PatientReadWithVisits(
+        id=patient.id,
+        first_name=patient.first_name,
+        last_name=patient.last_name,
+        dob=patient.dob,
+        phone=patient.phone,
+        notes=patient.notes,
+        created_at=patient.created_at,
+        visits=visit_reads,
+    )
 
 
 @app.post("/patients", response_model=PatientRead, status_code=201)
@@ -102,7 +138,27 @@ def get_visit(visit_id: int, session: Session = Depends(get_session)):
     visit = crud.get_visit(session, visit_id)
     if not visit:
         raise HTTPException(status_code=404, detail="Visit not found")
-    return visit
+
+    certs = crud.get_certificates_by_visit(session, visit_id)
+    return VisitReadWithCertificates(
+        id=visit.id,
+        patient_id=visit.patient_id,
+        date=visit.date,
+        doctor=visit.doctor,
+        reason=visit.reason,
+        diagnosis=visit.diagnosis,
+        created_at=visit.created_at,
+        certificates=[
+            CertificateRead(
+                id=c.id,
+                visit_id=c.visit_id,
+                cert_type=c.cert_type,
+                cert_data=c.cert_data,
+                created_at=c.created_at,
+            )
+            for c in certs
+        ],
+    )
 
 
 # Certificate endpoints
